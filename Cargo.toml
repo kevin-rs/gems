@@ -1,6 +1,6 @@
 [package]
 name = "gems"
-version = "0.0.2"
+version = "0.0.3"
 edition = "2021"
 description = "💎 A cli, tui, and sdk for interacting with the Gemini API (WIP)"
 license = "MIT"
@@ -9,6 +9,7 @@ categories = ["command-line-utilities", "science"]
 repository = "https://github.com/wiseaidev/gems"
 documentation = "https://docs.rs/gems"
 authors = ["Mahmoud Harmouch <oss@wiseai.dev>"]
+exclude = ["/examples"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
