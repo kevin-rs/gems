@@ -11,7 +11,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! gems = "0.0.3"
+//! gems = "0.0.4"
 //! ```
 //!
 //! 2. Use the `Client` struct to interact with the Gemini API:
