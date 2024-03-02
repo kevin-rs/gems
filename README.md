@@ -118,7 +118,7 @@ gems list
 
    ```toml
    [dependencies]
-   gems = "0.0.3"
+   gems = "0.0.4"
    ```
 
 1. Use the `Client` struct to interact with the Gemini API:
@@ -185,6 +185,7 @@ This repository contains a list of notebooks examples on how to use the sdk and 
 | ID | Example | Open on GitHub | Launch on Binder | Launch on Colab |
 |----|---------------|-----------|:-------------|-------------|
 | 1  | **Basic** | [![Github](https://img.shields.io/badge/launch-Github-181717.svg?logo=github&logoColor=white)](./examples/basic.ipynb) | [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/wiseaidev/gems/main?filepath=examples/basic.ipynb) |  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/wiseaidev/gems/blob/main/examples/basic.ipynb) |
+| 2  | **Rocket** | [![Github](https://img.shields.io/badge/launch-Github-181717.svg?logo=github&logoColor=white)](./examples/rocket.ipynb) | [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/wiseaidev/gems/main?filepath=examples/rocket.ipynb) |  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/wiseaidev/gems/blob/main/examples/rocket.ipynb) |
 
 
 ## 🤝 Contributing
