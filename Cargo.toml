@@ -1,0 +1,30 @@
+[package]
+name = "gems"
+version = "0.0.1"
+edition = "2021"
+description = "💎 A cli, tui, and sdk for interacting with the Gemini API (WIP)"
+license = "MIT"
+keywords = ["client", "google", "geoip", "gemini", "ai"]
+categories = ["command-line-utilities", "science"]
+repository = "https://github.com/wiseaidev/gems"
+documentation = "https://docs.rs/gems"
+authors = ["Mahmoud Harmouch <oss@wiseai.dev>"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+futures-util = "0.3.30"
+reqwest = { version = "0.11.24", features = ["json", "stream"] }
+serde = { version = "1.0.197", features = ["derive"] }
+serde_json = "1.0.114"
+tokio = { version = "1.36.0", features = ["full"] }
+clap = { version = "4.5.1", features = ["derive"] , optional = true  }
+
+[features]
+cli = ["clap"]
+
+[profile.release]
+codegen-units = 1
+opt-level = "z"
+lto = "thin"
+strip = "symbols"
