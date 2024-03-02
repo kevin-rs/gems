@@ -13,6 +13,7 @@
 - [Usage](#-usage-as-cli)
 - [Options](#-options)
 - [Subcommands](#-subcommands)
+- [Examples](#-examples)
 - [Contributing](#-contributing)
 - [License](#-license)
 
@@ -109,7 +110,9 @@ gems list
 | `info`                  | Get information about the current model.                 |
 | `list`                  | List available models.                                   |
 
-### ✨ Usage as Dependency
+
+## ✨ Usage as Dependency
+
 
 1. Add the `gems` crate:
 
@@ -146,36 +149,36 @@ This repository contains a list of notebooks examples on how to use the sdk and 
 
 1. Clone the repository to your local machine:
 
-  ```sh
-  git clone https://github.com/wiseaidev/gems.git
-  ```
+   ```sh
+   git clone https://github.com/wiseaidev/gems.git
+   ```
 
 1. Install the required dependencies and libraries. Make sure you have [`Rust`](https://rustup.rs/), [`Jupyter Notebook`](https://jupyter.org/install), and [`evcxr_jupyter`](https://github.com/evcxr/evcxr/blob/main/evcxr_jupyter/README.md) installed on your system.
 
-  ```sh
-  # Install a Rust toolchain (e.g. nightly):
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain nightly
-
-  # Install Jupyter Notebook
-  pip install notebook
-
-  # Install evcxr_jupyter
-  cargo install evcxr_jupyter
-  evcxr_jupyter --install 
-  ```
+   ```sh
+   # Install a Rust toolchain (e.g. nightly):
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain nightly
+ 
+   # Install Jupyter Notebook
+   pip install notebook
+ 
+   # Install evcxr_jupyter
+   cargo install evcxr_jupyter
+   evcxr_jupyter --install 
+   ```
 
 1. Navigate to the cloned repository and build the project:
 
-  ```sh
-  cd gems
-  cargo build --release --all-features
-  ```
+   ```sh
+   cd gems
+   cargo build --release --all-features
+   ```
 
 1. Start Jupyter Notebook:
 
-  ```sh
-  jupyter notebook
-  ```
+   ```sh
+   jupyter notebook
+   ```
 
 1. Access the notebooks in your web browser by clicking on the notebook file you want to explore.
 
