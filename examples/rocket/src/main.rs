@@ -74,10 +74,10 @@ async fn generate_content(client: &State<Client>, input_text: String) -> String 
     format = "application/json",
     data = "<input_text>"
 )]
-async fn stream_generate_content(client: &State<Client>, input_text: String) {
+async fn stream_generate_content(client: &State<Client>, input_text: String) -> String {
     let mut client = Client::new(&client.api_key, &client.model);
 
-    client.stream_generate_content(&input_text).await.unwrap();
+    client.stream_generate_content(&input_text, true).await.unwrap()
 }
 
 #[post(
