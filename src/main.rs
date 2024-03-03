@@ -33,7 +33,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("{}", response);
             }
             Command::Stream(cmd) => {
-                gemini_client.stream_generate_content(&cmd.text).await?;
+                gemini_client.stream_generate_content(&cmd.text, false).await?;
             }
             Command::Count(cmd) => {
                 let count = gemini_client.count_tokens(&cmd.text).await?;

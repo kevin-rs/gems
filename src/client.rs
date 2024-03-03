@@ -127,6 +127,7 @@ impl Client {
     /// # Arguments
     ///
     /// * `text` - A static string representing the input text for content generation.
+    /// * `suppress` - A boolean to decide whether or not to print the content being generated
     ///
     /// # Returns
     ///
@@ -140,14 +141,14 @@ impl Client {
     /// #[tokio::main]
     /// async fn main() {
     ///     let mut client = Client::new("your_api_key", "your_model");
-    ///     let result = client.stream_generate_content("input_text").await;
+    ///     let result = client.stream_generate_content("input_text", false).await;
     ///     match result {
     ///         Ok(_) => println!("Content streaming completed."),
     ///         Err(err) => eprintln!("Error: {:?}", err),
     ///     }
     /// }
     /// ```
-    pub async fn stream_generate_content(&mut self, text: &str) -> Result<(), Box<dyn Error>> {
+    pub async fn stream_generate_content(&mut self, text: &str, suppress: bool) -> Result<String, Box<dyn Error>> {
         let request_body = GeminiRequest {
             model: self.model.to_string(),
             contents: vec![Content {
@@ -179,6 +180,7 @@ impl Client {
 
         let mut stream = response.bytes_stream();
         let delay = 5;
+        let mut message: String = Default::default();
         while let Some(mut chunk) = stream.next().await {
             if let Ok(parsed_json) = std::str::from_utf8(chunk.as_mut().unwrap()) {
                 if let Some(text_value) = extract_text_from_partial_json(parsed_json) {
@@ -188,7 +190,8 @@ impl Client {
                         .collect();
 
                     for line in lines {
-                        if !line.is_empty() {
+                        message.push_str(&line.replace('\\', ""));
+                        if !line.is_empty() && !suppress {
                             type_with_cursor_effect(&line.replace('\\', ""), delay);
                         } else {
                             println!("\n");
@@ -202,7 +205,7 @@ impl Client {
 
         println!();
 
-        Ok(())
+        Ok(message)
     }
 
     /// Counts the number of tokens in the provided text using the Gemini API.

@@ -1,6 +1,6 @@
 [package]
 name = "gems"
-version = "0.0.4"
+version = "0.0.5"
 edition = "2021"
 description = "💎 A cli, tui, and sdk for interacting with the Gemini API (WIP)"
 license = "MIT"
@@ -29,3 +29,6 @@ codegen-units = 1
 opt-level = "z"
 lto = "thin"
 strip = "symbols"
+
+[dev-dependencies]
+bump2version = "0.1.2"
