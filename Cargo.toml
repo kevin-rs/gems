@@ -29,3 +29,6 @@ codegen-units = 1
 opt-level = "z"
 lto = "thin"
 strip = "symbols"
+
+[dev-dependencies]
+bump2version = "0.1.2"
