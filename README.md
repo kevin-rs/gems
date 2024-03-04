@@ -54,6 +54,16 @@ Generate an api key from [Google AI Studio](https://aistudio.google.com/app/apik
 gems generate -t "Hello"
 ```
 
+### Analyze an image and generate content from text:
+
+```sh
+curl -o image.jpg https://storage.googleapis.com/generativeai-downloads/images/scones.jpg
+
+gems vision -i image.jpg
+
+gems vision -i image.jpg -t "What's in the image?"
+```
+
 ### Stream generation of content:
 
 ```sh
@@ -103,6 +113,7 @@ gems list
 | Subcommand              | Description                                              |
 |-------------------------|----------------------------------------------------------|
 | `generate`              | Generate creative content.                               |
+| `vision`                | Analyze an image and generate content from text.         |
 | `stream`                | Stream the generation of content.                        |
 | `count`                 | Count the number of tokens in a text.                    |
 | `embed`                 | Embed content into a specified model.                    |
@@ -118,7 +129,7 @@ gems list
 
    ```toml
    [dependencies]
-   gems = "0.0.4"
+   gems = "0.0.7"
    ```
 
 1. Use the `Client` struct to interact with the Gemini API:

@@ -2,6 +2,7 @@ use crate::requests::Content;
 use crate::requests::GeminiEmbedRequest;
 use crate::requests::GeminiEmbedRequests;
 use crate::requests::GeminiRequest;
+use crate::requests::ImageContent;
 use crate::requests::Part;
 use crate::responses::BatchEmbedContentsResponse;
 use crate::responses::EmbedContentResponse;
@@ -100,9 +101,7 @@ impl Client {
         let request_body = GeminiRequest {
             model: self.model.to_string(),
             contents: vec![Content {
-                parts: vec![Part {
-                    text: text.to_string(),
-                }],
+                parts: vec![Part::text(text)],
             }],
         };
 
@@ -119,7 +118,11 @@ impl Client {
 
         let json: GeminiResponse = response.json().await?;
         let resp = json.candidates.ok_or("")?;
-        Ok(resp[0].content.parts[0].text.clone())
+
+        match &resp[0].content.parts[0] {
+            Part::Text { text } => Ok(text.clone()),
+            Part::Image { .. } => Err("Expected text but got image".into()),
+        }
     }
 
     /// Streams generated content using the Gemini API and prints it with a delay effect.
@@ -148,13 +151,15 @@ impl Client {
     ///     }
     /// }
     /// ```
-    pub async fn stream_generate_content(&mut self, text: &str, suppress: bool) -> Result<String, Box<dyn Error>> {
+    pub async fn stream_generate_content(
+        &mut self,
+        text: &str,
+        suppress: bool,
+    ) -> Result<String, Box<dyn Error>> {
         let request_body = GeminiRequest {
             model: self.model.to_string(),
             contents: vec![Content {
-                parts: vec![Part {
-                    text: text.to_string(),
-                }],
+                parts: vec![Part::text(text)],
             }],
         };
 
@@ -237,9 +242,7 @@ impl Client {
         let request_body = GeminiRequest {
             model: self.model.to_string(),
             contents: vec![Content {
-                parts: vec![Part {
-                    text: text.to_string(),
-                }],
+                parts: vec![Part::text(text)],
             }],
         };
 
@@ -341,9 +344,7 @@ impl Client {
         let request_body = GeminiEmbedRequest {
             model: self.model.to_string(),
             content: Content {
-                parts: vec![Part {
-                    text: text.to_string(),
-                }],
+                parts: vec![Part::text(text)],
             },
         };
 
@@ -403,9 +404,7 @@ impl Client {
             .map(|text| GeminiEmbedRequest {
                 model: "models/".to_owned() + &self.model,
                 content: Content {
-                    parts: vec![Part {
-                        text: text.to_string(),
-                    }],
+                    parts: vec![Part::text(text)],
                 },
             })
             .collect();
@@ -474,5 +473,77 @@ impl Client {
 
         let json: ModelsResponse = response.json().await?;
         Ok(json)
+    }
+
+    /// Generates content using the Gemini API with both text and image input.
+    ///
+    /// # Arguments
+    ///
+    /// * `text` - A static string representing the input text for content generation.
+    /// * `image_data` - A base64-encoded string representing the image data.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the generated content as a string or a reqwest::Error on failure.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use gems::Client;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let mut client = Client::new("your_api_key", "your_model");
+    ///     let result = client.generate_content_with_image("What is this picture?", "base64_encoded_image_data").await;
+    ///     match result {
+    ///         Ok(content) => println!("Generated Content: {}", content),
+    ///         Err(err) => eprintln!("Error: {:?}", err),
+    ///     }
+    /// }
+    /// ```
+    pub async fn generate_content_with_image(
+        &mut self,
+        text: &str,
+        image_data: &str,
+    ) -> Result<String, Box<dyn std::error::Error>> {
+        let model = "gemini-pro-vision".to_string();
+        let request_body = GeminiRequest {
+            model: model.clone(),
+            contents: vec![Content {
+                parts: vec![
+                    Part::text(text),
+                    Part::image(Some(ImageContent {
+                        mime_type: "image/jpeg".to_string(),
+                        data: image_data.to_string(),
+                    })),
+                ],
+            }],
+        };
+
+        let vision_url = self
+            .api_url
+            .join(&format!("/v1beta/models/{}:generateContent", model.clone()))
+            .unwrap();
+
+        let vision_url_with_key = vision_url
+            .clone()
+            .join(&format!("?key={}", self.api_key))
+            .unwrap();
+
+        let response = self
+            .client
+            .post(vision_url_with_key)
+            .header(header::CONTENT_TYPE, "application/json")
+            .json(&request_body)
+            .send()
+            .await?;
+
+        let json: GeminiResponse = response.json().await?;
+        let resp = json.candidates.ok_or("")?;
+
+        match &resp[0].content.parts[0] {
+            Part::Text { text } => Ok(text.clone()),
+            Part::Image { .. } => Err("Expected text but got image".into()),
+        }
     }
 }

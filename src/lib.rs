@@ -11,7 +11,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! gems = "0.0.4"
+//! gems = "0.0.7"
 //! ```
 //!
 //! 2. Use the `Client` struct to interact with the Gemini API:
@@ -41,6 +41,7 @@
 //! | Subcommand              | Description                                              |
 //! |-------------------------|----------------------------------------------------------|
 //! | `generate`              | Generate creative content.                               |
+//! | `vision`                | Analyze an image and generate content from text.         |
 //! | `stream`                | Stream the generation of content.                        |
 //! | `count`                 | Count the number of tokens in a text.                    |
 //! | `embed`                 | Embed content into a specified model.                    |

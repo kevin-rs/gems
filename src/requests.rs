@@ -30,11 +30,30 @@ pub struct Content {
     /// List of parts composing the content.
     pub parts: Vec<Part>,
 }
-/// Structure representing a part of the content.
+
+/// Define an enum to represent different types of parts in the content.
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Part {
-    /// The text of the content part.
-    pub text: String,
+#[serde(untagged)]
+pub enum Part {
+    /// Represents a text part in the content.
+    Text { text: String },
+    /// Represents an image part in the content.
+    Image { inline_data: Option<ImageContent> },
+}
+
+/// Implement the `Part` enum for the `Serialize` trait
+impl Part {
+    /// Create a new `Part` with text content.
+    pub fn text(text: &str) -> Self {
+        Part::Text {
+            text: text.to_string(),
+        }
+    }
+
+    /// Create a new `Part` with image content.
+    pub fn image(inline_data: Option<ImageContent>) -> Self {
+        Part::Image { inline_data }
+    }
 }
 
 /// Structure representing a candidate content.
@@ -42,4 +61,13 @@ pub struct Part {
 pub struct Candidate {
     /// The content of the candidate.
     pub content: Content,
+}
+
+/// Structure representing the image part of the Gemini request.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ImageContent {
+    /// The MIME type of the image.
+    pub mime_type: String,
+    /// The actual image data in a base64-encoded string.
+    pub data: String,
 }
