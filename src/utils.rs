@@ -1,3 +1,6 @@
+use base64::{engine::general_purpose::STANDARD, Engine as _};
+use std::fs::File;
+use std::io::Read;
 use std::io::Write;
 use std::thread;
 use std::time::Duration;
@@ -52,4 +55,44 @@ pub fn type_with_cursor_effect(text: &str, delay: u64) {
         std::io::stdout().flush().unwrap();
         thread::sleep(Duration::from_millis(delay));
     }
+}
+
+/// Function to load and encode an image to base64.
+///
+/// This function takes a file path as input, reads the corresponding image file,
+/// and encodes its data to base64 format. The resulting base64-encoded string is then
+/// returned as a `Result`. If the operation is successful, the encoded string is wrapped
+/// in an `Ok` variant; otherwise, an error is returned with information about the failure.
+///
+/// # Arguments
+///
+/// * `file_path` - The path to the image file to be loaded and encoded.
+///
+/// # Returns
+///
+/// A `Result` containing the base64-encoded string if successful, or an error if the
+/// operation fails.
+///
+/// # Examples
+///
+/// ```
+/// use gems::utils::load_and_encode_image;
+///
+/// match load_and_encode_image("/path/to/image.jpg") {
+///     Ok(base64_string) => {
+///         println!("Image successfully encoded: {}", base64_string);
+///     }
+///     Err(err) => {
+///         eprintln!("Error loading and encoding image: {}", err);
+///     }
+/// }
+/// ```
+pub fn load_and_encode_image(file_path: &str) -> Result<String, Box<dyn std::error::Error>> {
+    // Read the image file
+    let mut file = File::open(file_path)?;
+    let mut buffer = Vec::new();
+    file.read_to_end(&mut buffer)?;
+
+    let base64_encoded = STANDARD.encode(&buffer);
+    Ok(base64_encoded)
 }

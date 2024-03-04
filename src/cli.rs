@@ -58,6 +58,9 @@ EXAMPLES:
   Stream generate content:
     gems stream -t "Generate a short fictional story"
 
+  Vision:
+    gems vision -i /path/to/your/image.jpg
+
   Count tokens:
     gems count -t "Hello There!"
 
@@ -91,6 +94,7 @@ pub struct Cli {
 #[derive(Subcommand, Debug, Clone)]
 pub enum Command {
     Generate(Generate),
+    Vision(Vision),
     Stream(Stream),
     Count(Count),
     Embed(Embed),
@@ -146,3 +150,14 @@ pub struct Info {}
 #[cfg(feature = "cli")]
 #[derive(Args, Debug, Clone)]
 pub struct List {}
+
+#[cfg(feature = "cli")]
+#[derive(Args, Debug, Clone)]
+pub struct Vision {
+    /// Path to your image to describe.
+    #[arg(short, long)]
+    pub image: String,
+    /// The text to generate content from.
+    #[arg(short, long, default_value_t = String::from("What is this picture?"))]
+    pub text: String,
+}

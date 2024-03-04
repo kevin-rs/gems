@@ -8,8 +8,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     {
         use clap::Parser;
         use gems::cli::{Cli, Command};
+        use gems::utils::load_and_encode_image;
         use gems::Client;
         use std::env;
+
         let args: Cli = Cli::parse();
 
         let api_key = if args.api_key.is_none() {
@@ -33,7 +35,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("{}", response);
             }
             Command::Stream(cmd) => {
-                gemini_client.stream_generate_content(&cmd.text, false).await?;
+                gemini_client
+                    .stream_generate_content(&cmd.text, false)
+                    .await?;
             }
             Command::Count(cmd) => {
                 let count = gemini_client.count_tokens(&cmd.text).await?;
@@ -47,6 +51,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let texts: Vec<&str> = cmd.texts.iter().map(|text| text.as_str()).collect();
                 let count = gemini_client.batch_embed_contents(texts).await?;
                 println!("Batch Embed Contents: {:?}", count);
+            }
+            Command::Vision(cmd) => {
+                let base64_image_data = match load_and_encode_image(&cmd.image) {
+                    Ok(data) => data,
+                    Err(_) => {
+                        eprintln!("Error loading image!");
+                        "".to_string()
+                    }
+                };
+                let response = gemini_client
+                    .generate_content_with_image(&cmd.text, &base64_image_data)
+                    .await?;
+                println!("{}", response);
             }
             Command::Info(_) => {
                 let model_info = gemini_client.get_model_info().await?;
