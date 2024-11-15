@@ -1,6 +1,6 @@
 [package]
 name = "gems"
-version = "0.0.7"
+version = "0.0.8"
 edition = "2021"
 description = "💎 A cli, tui, and sdk for interacting with the Gemini API (WIP)"
 license = "MIT"
