@@ -9,10 +9,9 @@ use crate::responses::EmbedContentResponse;
 use crate::responses::GeminiResponse;
 use crate::responses::ModelInfo;
 use crate::responses::ModelsResponse;
-use crate::utils::{extract_text_from_partial_json, type_with_cursor_effect};
-use futures_util::StreamExt;
 use reqwest::header;
 use reqwest::Client as ReqClient;
+use reqwest::Response;
 use reqwest::Url;
 use serde_json::Value;
 use std::error::Error;
@@ -139,23 +138,46 @@ impl Client {
     /// # Examples
     ///
     /// ```
+    /// use futures_util::StreamExt;
     /// use gems::Client;
+    /// use gems::utils::{
+    ///     extract_text_from_partial_json, type_with_cursor_effect,
+    /// };
     ///
     /// #[tokio::main]
     /// async fn main() {
     ///     let mut client = Client::new("your_api_key", "your_model");
-    ///     let result = client.stream_generate_content("input_text", false).await;
-    ///     match result {
-    ///         Ok(_) => println!("Content streaming completed."),
-    ///         Err(err) => eprintln!("Error: {:?}", err),
+    ///     let result = client.stream_generate_content("input_text").await;
+    ///     let mut stream = result.bytes_stream();
+    ///     let delay = 5;
+    ///     let mut message: String = Default::default();
+    ///     while let Some(mut chunk) = stream.next().await {
+    ///         if let Ok(parsed_json) = std::str::from_utf8(chunk.as_mut().unwrap()) {
+    ///             if let Some(text_value) = extract_text_from_partial_json(parsed_json) {
+    ///                 let lines: Vec<&str> = text_value
+    ///                     .split("\\n")
+    ///                     .flat_map(|s| s.split('\n'))
+    ///                     .collect();
+    ///     
+    ///                 for line in lines {
+    ///                     message.push_str(&line.replace('\\', ""));
+    ///                     if !line.is_empty() {
+    ///                         type_with_cursor_effect(&line.replace('\\', ""), delay);
+    ///                     } else {
+    ///                         println!("\n");
+    ///                     }
+    ///                 }
+    ///             }
+    ///         } else {
+    ///             eprintln!("Failed to parse chunk: {:?}", chunk.as_ref().unwrap());
+    ///         }
     ///     }
     /// }
     /// ```
     pub async fn stream_generate_content(
         &mut self,
         text: &str,
-        suppress: bool,
-    ) -> Result<String, Box<dyn Error>> {
+    ) -> Result<Response, Box<dyn Error>> {
         let request_body = GeminiRequest {
             model: self.model.to_string(),
             contents: vec![Content {
@@ -183,34 +205,7 @@ impl Client {
             .send()
             .await?;
 
-        let mut stream = response.bytes_stream();
-        let delay = 5;
-        let mut message: String = Default::default();
-        while let Some(mut chunk) = stream.next().await {
-            if let Ok(parsed_json) = std::str::from_utf8(chunk.as_mut().unwrap()) {
-                if let Some(text_value) = extract_text_from_partial_json(parsed_json) {
-                    let lines: Vec<&str> = text_value
-                        .split("\\n")
-                        .flat_map(|s| s.split('\n'))
-                        .collect();
-
-                    for line in lines {
-                        message.push_str(&line.replace('\\', ""));
-                        if !line.is_empty() && !suppress {
-                            type_with_cursor_effect(&line.replace('\\', ""), delay);
-                        } else {
-                            println!("\n");
-                        }
-                    }
-                }
-            } else {
-                eprintln!("Failed to parse chunk: {:?}", chunk.as_ref().unwrap());
-            }
-        }
-
-        println!();
-
-        Ok(message)
+        Ok(response)
     }
 
     /// Counts the number of tokens in the provided text using the Gemini API.
