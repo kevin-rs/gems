@@ -4,3 +4,7 @@ current_version = 0.0.7
 [bumpversion:file:Cargo.toml]
 search = 'version = "{current_version}"'
 replace = 'version = "{new_version}"'
+
+[bumpversion:file:README.md]
+search = '   gems = "{current_version}"'
+replace = '   gems = "{new_version}"'
