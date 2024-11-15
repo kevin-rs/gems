@@ -148,7 +148,7 @@ impl Client {
     /// async fn main() {
     ///     let mut client = Client::new("your_api_key", "your_model");
     ///     let result = client.stream_generate_content("input_text").await;
-    ///     let mut stream = result.bytes_stream();
+    ///     let mut stream = result.expect("response").bytes_stream();
     ///     let delay = 5;
     ///     let mut message: String = Default::default();
     ///     while let Some(mut chunk) = stream.next().await {
