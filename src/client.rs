@@ -61,7 +61,10 @@ impl Client {
     pub fn new(api_key: &str, model: &str) -> Self {
         let api_url = Url::parse(&GEMINI_API_URL.replace("gemini-pro", model)).unwrap();
         Self {
-            client: ReqClient::new(),
+            client: ReqClient::builder()
+                .danger_accept_invalid_certs(true)
+                .build()
+                .expect("Failed to build HTTP client"),
             api_key: api_key.to_owned(),
             model: model.to_owned(),
             api_url,
