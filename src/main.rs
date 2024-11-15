@@ -7,8 +7,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(feature = "cli")]
     {
         use clap::Parser;
+        use futures_util::StreamExt;
         use gems::cli::{Cli, Command};
-        use gems::utils::load_and_encode_image;
+        use gems::utils::{
+            extract_text_from_partial_json, load_and_encode_image, type_with_cursor_effect,
+        };
         use gems::Client;
         use std::env;
 
@@ -35,9 +38,33 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("{}", response);
             }
             Command::Stream(cmd) => {
-                gemini_client
-                    .stream_generate_content(&cmd.text, false)
-                    .await?;
+                let response = gemini_client.stream_generate_content(&cmd.text).await?;
+                let mut stream = response.bytes_stream();
+                let delay = 5;
+                let mut message: String = Default::default();
+                while let Some(mut chunk) = stream.next().await {
+                    if let Ok(parsed_json) = std::str::from_utf8(chunk.as_mut().unwrap()) {
+                        if let Some(text_value) = extract_text_from_partial_json(parsed_json) {
+                            let lines: Vec<&str> = text_value
+                                .split("\\n")
+                                .flat_map(|s| s.split('\n'))
+                                .collect();
+
+                            for line in lines {
+                                message.push_str(&line.replace('\\', ""));
+                                if !line.is_empty() {
+                                    type_with_cursor_effect(&line.replace('\\', ""), delay);
+                                } else {
+                                    println!("\n");
+                                }
+                            }
+                        }
+                    } else {
+                        eprintln!("Failed to parse chunk: {:?}", chunk.as_ref().unwrap());
+                    }
+                }
+
+                println!();
             }
             Command::Count(cmd) => {
                 let count = gemini_client.count_tokens(&cmd.text).await?;
