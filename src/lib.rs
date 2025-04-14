@@ -4,6 +4,7 @@
 pub mod chat;
 pub mod client;
 pub mod embed;
+pub mod imagen;
 pub mod messages;
 pub mod models;
 pub mod requests;

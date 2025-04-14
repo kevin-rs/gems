@@ -1,4 +1,5 @@
-use anyhow::Result;
+use crate::responses::Part;
+use anyhow::{anyhow, Result};
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use std::fs::File;
 use std::io::Read;
@@ -96,4 +97,22 @@ pub fn load_and_encode_image(file_path: &str) -> Result<String> {
 
     let base64_encoded = STANDARD.encode(&buffer);
     Ok(base64_encoded)
+}
+
+pub fn extract_image_or_text(parts: &[Part]) -> Result<Vec<u8>> {
+    if let Some(base64_data) = parts.iter().find_map(|part| match part {
+        Part::Image { inline_data } => Some(inline_data.data.clone()),
+        _ => None,
+    }) {
+        let image_bytes = STANDARD.decode(&base64_data)?;
+        Ok(image_bytes)
+    }
+    else if let Some(text) = parts.iter().find_map(|part| match part {
+        Part::Text { text } => Some(text.clone()),
+        _ => None,
+    }) {
+        Err(anyhow!("Expected image but got only text: {}", text))
+    } else {
+        Err(anyhow!("No image or text found in response"))
+    }
 }

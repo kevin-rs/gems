@@ -20,6 +20,7 @@ pub enum Model {
     Imagen3,
     Veo2,
     Flash20Live,
+    FlashExpImage,
 }
 
 #[allow(clippy::to_string_trait_impl)]
@@ -36,6 +37,7 @@ impl ToString for Model {
             Model::Imagen3 => "imagen-3.0-generate-002",
             Model::Veo2 => "veo-2.0-generate-001",
             Model::Flash20Live => "gemini-2.0-flash-live-001",
+            Model::FlashExpImage => "gemini-2.0-flash-exp-image-generation",
         }
         .to_string()
     }
@@ -56,6 +58,7 @@ impl FromStr for Model {
             "imagen-3.0-generate-002" => Ok(Model::Imagen3),
             "veo-2.0-generate-001" => Ok(Model::Veo2),
             "gemini-2.0-flash-live-001" => Ok(Model::Flash20Live),
+            "gemini-2.0-flash-exp-image-generation" => Ok(Model::Flash20Live),
             _ => Err(anyhow!("Unknown model: {}", s)),
         }
     }

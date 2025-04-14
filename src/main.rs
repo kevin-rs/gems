@@ -14,6 +14,7 @@ async fn main() -> Result<()> {
         use gems::cli::{Cli, Command};
         use gems::embed::BatchEmbeddingBuilder;
         use gems::embed::EmbeddingBuilder;
+        use gems::imagen::ImageGenBuilder;
         use gems::messages::Content;
         use gems::messages::Message;
         use gems::models::ModBuilder;
@@ -166,6 +167,22 @@ async fn main() -> Result<()> {
             Command::List(_) => {
                 let models = gemini_client.models().list().await?;
                 models.print();
+            }
+            Command::Imagen(cmd) => {
+                gemini_client.set_model(Model::FlashExpImage);
+
+                let params = ImageGenBuilder::default()
+                    .input(Message::User {
+                        content: Content::Text(cmd.text),
+                        name: None,
+                    })
+                    .model(Model::FlashExpImage)
+                    .build()
+                    .unwrap();
+
+                let image_data = gemini_client.images().generate(params).await?;
+
+                std::fs::write("output.png", &image_data)?;
             }
         }
     }

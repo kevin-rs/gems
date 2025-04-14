@@ -1,4 +1,4 @@
-use crate::requests::Candidate;
+use crate::requests::Candidate as ReqCandidate;
 use serde::{Deserialize, Serialize};
 
 /// Response structure for content embedding.
@@ -120,5 +120,62 @@ impl ModelsResponse {
 #[derive(Debug, Deserialize)]
 pub struct GeminiResponse {
     /// List of generated candidates.
+    pub candidates: Option<Vec<ReqCandidate>>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImagenResponse {
     pub candidates: Option<Vec<Candidate>>,
+    pub usage_metadata: Option<UsageMetadata>,
+    pub model_version: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Candidate {
+    pub content: Content,
+    pub finish_reason: Option<String>,
+    pub index: Option<i32>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Content {
+    pub parts: Vec<Part>,
+    pub role: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(untagged)]
+pub enum Part {
+    Text {
+        text: String,
+    },
+    Image {
+        #[serde(rename = "inlineData")]
+        inline_data: ImageContent,
+    },
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ImageContent {
+    pub mime_type: String,
+    pub data: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UsageMetadata {
+    pub prompt_token_count: Option<i32>,
+    pub total_token_count: Option<i32>,
+    pub prompt_tokens_details: Option<Vec<PromptTokenDetail>>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PromptTokenDetail {
+    pub modality: Option<String>,
+    pub token_count: Option<i32>,
 }

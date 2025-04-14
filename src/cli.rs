@@ -101,6 +101,7 @@ pub enum Command {
     Batch(Batch),
     Info(Info),
     List(List),
+    Imagen(Imagen),
 }
 
 #[cfg(feature = "cli")]
@@ -159,5 +160,13 @@ pub struct Vision {
     pub image: String,
     /// The text to generate content from.
     #[arg(short, long, default_value_t = String::from("What is this picture?"))]
+    pub text: String,
+}
+
+#[cfg(feature = "cli")]
+#[derive(Args, Debug, Clone)]
+pub struct Imagen {
+    /// The text to generate image from.
+    #[arg(short, long, default_value_t = String::from("Hi, step bro... I need help generating a happy, humble, bumble Rustacean. he's stuck in the shower and won't compile."))]
     pub text: String,
 }

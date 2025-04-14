@@ -100,6 +100,12 @@ gems info
 gems list
 ```
 
+### Generate an Image
+
+```sh
+gems imagen -t "Hi, can you create a 3d rendered image of a pig with wings and a top hat flying over a happy futuristic scifi city with lots of greenery?"
+```
+
 ## 🎨 Options
 
 | Option                   | Description                                              |
@@ -115,6 +121,7 @@ gems list
 | `generate`              | Generate creative content.                               |
 | `vision`                | Analyze an image and generate content from text.         |
 | `stream`                | Stream the generation of content.                        |
+| `imagen`                | Generate an image.                                       |
 | `count`                 | Count the number of tokens in a text.                    |
 | `embed`                 | Embed content into a specified model.                    |
 | `batch`                 | Batch embed multiple contents.                           |

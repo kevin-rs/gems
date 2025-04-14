@@ -28,6 +28,7 @@ impl Streaming {
             contents: vec![Content {
                 parts: vec![params.input.to_part()],
             }],
+            config: None,
         };
 
         let req = self

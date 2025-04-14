@@ -8,7 +8,11 @@ pub struct GeminiRequest {
 
     /// List of content items for generation.
     pub contents: Vec<Content>,
+
+    #[serde(rename = "generationConfig", skip_serializing_if = "Option::is_none")]
+    pub config: Option<GenerationConfig>,
 }
+
 /// Request structure for content embedding.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GeminiEmbedRequest {
@@ -32,7 +36,7 @@ pub struct Content {
 }
 
 /// Define an enum to represent different types of parts in the content.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(untagged)]
 pub enum Part {
     /// Represents a text part in the content.
@@ -64,10 +68,16 @@ pub struct Candidate {
 }
 
 /// Structure representing the image part of the Gemini request.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ImageContent {
     /// The MIME type of the image.
     pub mime_type: String,
     /// The actual image data in a base64-encoded string.
     pub data: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GenerationConfig {
+    #[serde(rename = "responseModalities")]
+    pub response_modalities: Vec<String>,
 }
