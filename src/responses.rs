@@ -35,8 +35,8 @@ pub struct ModelInfo {
     #[serde(rename = "displayName")]
     pub display_name: String,
 
-    /// The description of the model.
-    pub description: String,
+    /// The description of the model (optional in some cases).
+    pub description: Option<String>,
 
     /// The limit on input tokens accepted by the model.
     #[serde(rename = "inputTokenLimit")]
@@ -53,11 +53,15 @@ pub struct ModelInfo {
     /// The temperature parameter for controlling randomness in generation.
     pub temperature: Option<f32>,
 
-    /// The top-P parameter for nucleus sampling in generation.
+    /// The max temperature allowed for the model (optional).
+    #[serde(rename = "maxTemperature")]
+    pub max_temperature: Option<f32>,
+
+    /// The top-P parameter for nucleus sampling in generation (optional).
     #[serde(rename = "topP")]
     pub top_p: Option<f32>,
 
-    /// The top-K parameter for top-k sampling in generation.
+    /// The top-K parameter for top-k sampling in generation (optional).
     #[serde(rename = "topK")]
     pub top_k: Option<i32>,
 }
@@ -76,26 +80,31 @@ Model:
     Output Token Limit: {}
     Supported Generation Methods: {:?}
     Temperature: {:?}
+    Max Temperature: {:?}
     Top P: {:?}
     Top K: {:?}
 "#,
             self.name.replace("models/", ""),
             self.version,
             self.display_name,
-            self.description,
+            self.description
+                .clone()
+                .unwrap_or_else(|| "N/A".to_string()),
             self.input_token_limit,
             self.output_token_limit,
             self.supported_generation_methods,
             self.temperature,
+            self.max_temperature,
             self.top_p,
             self.top_k
         );
     }
 }
+
 /// Response structure for retrieving a list of models.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ModelsResponse {
-    /// List of models.
+    /// The list of models.
     pub models: Vec<ModelInfo>,
 }
 

@@ -79,13 +79,13 @@ gems count -t "Hello There!"
 ### Embed content into a specified model:
 
 ```sh
-gems -m 'embedding-001' embed -t "Write a story about a magic backpack."
+gems embed -t "Write a story about a magic backpack."
 ```
 
 ### Batch embed multiple contents:
 
 ```sh
-gems -m 'embedding-001' batch -t "Write a story about a magic backpack.","Generate a poem about nature."
+gems batch -t "Write a story about a magic backpack.","Generate a poem about nature."
 ```
 
 ### Get information about the current model:
@@ -136,14 +136,28 @@ gems list
 
    ```rust
    use gems::Client;
- 
+   use gems::traits::CTrait;
+   use gems::messages::Content;
+   use gems::messages::Message;
+   use gems::models::Model;
+   use gems::chat::ChatBuilder;
+   use anyhow::Result;
+
    #[tokio::main]
-   async fn main() {
-       let mut client = Client::new("your_api_key", "your_model");
- 
-       // Use the various functions provided by the client
-       // For example:
-       match client.generate_content("Hello").await {
+   async fn main() -> Result<()> {
+        let mut gemini_client = Client::builder().model("your-model").build()?;
+
+        gemini_client.set_api_key("your-api-key".to_string());
+
+      let parameters = ChatBuilder::default()
+          .model(Model::Flash20)
+          .messages(vec![Message::User {
+              content: Content::Text("Hello".to_string()),
+              name: None,
+          }])
+          .build()?;
+
+       match gemini_client.chat().generate(parameters).await {
            Ok(response) => {
                println!("{}", response);
            }
@@ -151,6 +165,8 @@ gems list
                eprintln!("Error: {:?}", err);
            }
        }
+
+       Ok(())
    }
    ```
 
@@ -161,7 +177,7 @@ This repository contains a list of notebooks examples on how to use the sdk and 
 1. Clone the repository to your local machine:
 
    ```sh
-   git clone https://github.com/wiseaidev/gems.git
+   git clone https://github.com/kevin-rs/gems.git
    ```
 
 1. Install the required dependencies and libraries. Make sure you have [`Rust`](https://rustup.rs/), [`Jupyter Notebook`](https://jupyter.org/install), and [`evcxr_jupyter`](https://github.com/evcxr/evcxr/blob/main/evcxr_jupyter/README.md) installed on your system.
@@ -195,13 +211,13 @@ This repository contains a list of notebooks examples on how to use the sdk and 
 
 | ID | Example | Open on GitHub | Launch on Binder | Launch on Colab |
 |----|---------------|-----------|:-------------|-------------|
-| 1  | **Basic** | [![Github](https://img.shields.io/badge/launch-Github-181717.svg?logo=github&logoColor=white)](./examples/basic.ipynb) | [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/wiseaidev/gems/main?filepath=examples/basic.ipynb) |  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/wiseaidev/gems/blob/main/examples/basic.ipynb) |
-| 2  | **Rocket** | [![Github](https://img.shields.io/badge/launch-Github-181717.svg?logo=github&logoColor=white)](./examples/rocket.ipynb) | [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/wiseaidev/gems/main?filepath=examples/rocket.ipynb) |  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/wiseaidev/gems/blob/main/examples/rocket.ipynb) |
-| 3  | **Axum** | [![Github](https://img.shields.io/badge/launch-Github-181717.svg?logo=github&logoColor=white)](./examples/axum.ipynb) | [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/wiseaidev/gems/main?filepath=examples/axum.ipynb) |  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/wiseaidev/gems/blob/main/examples/axum.ipynb) |
+| 1  | **Basic** | [![Github](https://img.shields.io/badge/launch-Github-181717.svg?logo=github&logoColor=white)](./examples/basic.ipynb) | [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/kevin-rs/gems/main?filepath=examples/basic.ipynb) |  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kevin-rs/gems/blob/main/examples/basic.ipynb) |
+| 2  | **Rocket** | [![Github](https://img.shields.io/badge/launch-Github-181717.svg?logo=github&logoColor=white)](./examples/rocket.ipynb) | [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/kevin-rs/gems/main?filepath=examples/rocket.ipynb) |  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kevin-rs/gems/blob/main/examples/rocket.ipynb) |
+| 3  | **Axum** | [![Github](https://img.shields.io/badge/launch-Github-181717.svg?logo=github&logoColor=white)](./examples/axum.ipynb) | [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/kevin-rs/gems/main?filepath=examples/axum.ipynb) |  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kevin-rs/gems/blob/main/examples/axum.ipynb) |
 
 ## 🤝 Contributing
 
-Contributions and feedback are welcome! If you'd like to contribute, report an issue, or suggest an enhancement, please engage with the project on [GitHub](https://github.com/wiseaidev/gems). Your contributions help improve this crate for the community.
+Contributions and feedback are welcome! If you'd like to contribute, report an issue, or suggest an enhancement, please engage with the project on [GitHub](https://github.com/kevin-rs/gems). Your contributions help improve this crate for the community.
 
 ## 📄 License
 
