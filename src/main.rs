@@ -1,17 +1,30 @@
+use anyhow::Result;
+
 /// The main entry point of `gems`.
 ///
 /// It parses command-line arguments using the `clap` crate, configures the client based on
 /// the provided command-line options, and performs an operation using the specified subcommand.
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     #[cfg(feature = "cli")]
     {
         use clap::Parser;
         use futures_util::StreamExt;
+        use gems::chat::ChatBuilder;
         use gems::cli::{Cli, Command};
+        use gems::embed::BatchEmbeddingBuilder;
+        use gems::embed::EmbeddingBuilder;
+        use gems::messages::Content;
+        use gems::messages::Message;
+        use gems::models::ModBuilder;
+        use gems::models::Model;
+        use gems::stream::StreamBuilder;
+        use gems::tokens::TokenBuilder;
+        use gems::traits::CTrait;
         use gems::utils::{
             extract_text_from_partial_json, load_and_encode_image, type_with_cursor_effect,
         };
+        use gems::vision::VisionBuilder;
         use gems::Client;
         use std::env;
 
@@ -25,20 +38,37 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let model = if args.model.is_none() {
             env::var("GEMINI_MODEL")
-                .unwrap_or("gemini-pro".to_string())
+                .unwrap_or("gemini-2.0-flash".to_string())
                 .to_owned()
         } else {
             args.model.unwrap().to_owned()
         };
-        let mut gemini_client = Client::new(&api_key, &model);
+        let mut gemini_client = Client::builder().model(&model).build()?;
 
+        gemini_client.set_api_key(api_key);
         match args.cmd {
             Command::Generate(cmd) => {
-                let response = gemini_client.generate_content(&cmd.text).await?;
+                let parameters = ChatBuilder::default()
+                    .model(Model::Flash20)
+                    .messages(vec![Message::User {
+                        content: Content::Text(cmd.text),
+                        name: None,
+                    }])
+                    .build()?;
+
+                let response = gemini_client.chat().generate(parameters).await?;
                 println!("{}", response);
             }
             Command::Stream(cmd) => {
-                let response = gemini_client.stream_generate_content(&cmd.text).await?;
+                let parameters = StreamBuilder::default()
+                    .model(Model::Flash20)
+                    .input(Message::User {
+                        content: Content::Text(cmd.text),
+                        name: None,
+                    })
+                    .build()?;
+
+                let response = gemini_client.stream().generate(parameters).await?;
                 let mut stream = response.bytes_stream();
                 let delay = 5;
                 let mut message: String = Default::default();
@@ -67,17 +97,45 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!();
             }
             Command::Count(cmd) => {
-                let count = gemini_client.count_tokens(&cmd.text).await?;
+                let params = TokenBuilder::default()
+                    .input(Message::User {
+                        content: Content::Text(cmd.text),
+                        name: None,
+                    })
+                    .build()?;
+
+                let count = gemini_client.tokens().count(params).await?;
                 println!("Token Count: {:?}", count);
             }
             Command::Embed(cmd) => {
-                let count = gemini_client.embed_content(&cmd.text).await?;
-                println!("Embed Content: {:?}", count);
+                let params = EmbeddingBuilder::default()
+                    .model(Model::Embedding)
+                    .input(Message::User {
+                        content: Content::Text(cmd.text),
+                        name: None,
+                    })
+                    .build()?;
+                gemini_client.set_model(Model::Embedding);
+                let response = gemini_client.embeddings().create(params).await?;
+                println!("Embed Content: {:?}", response);
             }
             Command::Batch(cmd) => {
-                let texts: Vec<&str> = cmd.texts.iter().map(|text| text.as_str()).collect();
-                let count = gemini_client.batch_embed_contents(texts).await?;
-                println!("Batch Embed Contents: {:?}", count);
+                let texts: Vec<Message> = cmd
+                    .texts
+                    .iter()
+                    .map(|text| Message::User {
+                        content: Content::Text(text.into()),
+                        name: None,
+                    })
+                    .collect();
+                let params = BatchEmbeddingBuilder::default()
+                    .model(Model::Embedding)
+                    .input(texts)
+                    .build()?;
+
+                gemini_client.set_model(Model::Embedding);
+                let response = gemini_client.embeddings().batch(params).await?;
+                println!("Batch Embed Contents: {:?}", response);
             }
             Command::Vision(cmd) => {
                 let base64_image_data = match load_and_encode_image(&cmd.image) {
@@ -87,17 +145,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         "".to_string()
                     }
                 };
-                let response = gemini_client
-                    .generate_content_with_image(&cmd.text, &base64_image_data)
-                    .await?;
-                println!("{}", response);
+                let params = VisionBuilder::default()
+                    .input(Message::User {
+                        content: Content::Text(cmd.text),
+                        name: None,
+                    })
+                    .image(Message::Tool {
+                        content: base64_image_data,
+                    })
+                    .build()?;
+
+                let result = gemini_client.vision().generate(params).await?;
+                println!("{}", result);
             }
             Command::Info(_) => {
-                let model_info = gemini_client.get_model_info().await?;
+                let params = ModBuilder::default().model(Model::default()).build()?;
+                let model_info = gemini_client.models().get(params).await?;
                 model_info.print();
             }
             Command::List(_) => {
-                let models = gemini_client.list_models().await?;
+                let models = gemini_client.models().list().await?;
                 models.print();
             }
         }

@@ -1,3 +1,4 @@
+use anyhow::Result;
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use std::fs::File;
 use std::io::Read;
@@ -87,7 +88,7 @@ pub fn type_with_cursor_effect(text: &str, delay: u64) {
 ///     }
 /// }
 /// ```
-pub fn load_and_encode_image(file_path: &str) -> Result<String, Box<dyn std::error::Error>> {
+pub fn load_and_encode_image(file_path: &str) -> Result<String> {
     // Read the image file
     let mut file = File::open(file_path)?;
     let mut buffer = Vec::new();

@@ -1,547 +1,144 @@
-use crate::requests::Content;
-use crate::requests::GeminiEmbedRequest;
-use crate::requests::GeminiEmbedRequests;
-use crate::requests::GeminiRequest;
-use crate::requests::ImageContent;
-use crate::requests::Part;
-use crate::responses::BatchEmbedContentsResponse;
-use crate::responses::EmbedContentResponse;
-use crate::responses::GeminiResponse;
-use crate::responses::ModelInfo;
-use crate::responses::ModelsResponse;
-use reqwest::header;
-use reqwest::Client as ReqClient;
-use reqwest::Response;
+use crate::chat::Chats;
+use crate::embed::Embeddings;
+use crate::models::Model;
+use crate::models::Models;
+use crate::stream::Streaming;
+use crate::tokens::Tokens;
+use crate::traits::CTrait;
+use crate::vision::Visions;
+use anyhow::anyhow;
+use anyhow::Result;
+use reqwest::Client as HttpClient;
+use reqwest::Method;
+use reqwest::RequestBuilder;
 use reqwest::Url;
-use serde_json::Value;
-use std::error::Error;
+use std::str::FromStr;
+use std::sync::{Arc, RwLock};
 
-const GEMINI_API_URL: &str =
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
+const GEMINI_BASE_URL: &str = "https://generativelanguage.googleapis.com/v1beta/models";
 
-/// Gemini API client structure.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
+#[allow(dead_code)]
 pub struct Client {
-    /// Reqwest client instance.
-    pub client: ReqClient,
-
-    /// API key for authentication.
-    pub api_key: String,
-
-    /// Model to be used.
-    pub model: String,
-
-    /// API URL for Gemini.
-    pub api_url: Url,
+    http_client: Arc<HttpClient>,
+    api_key: Arc<RwLock<Option<String>>>,
+    model: Arc<RwLock<Model>>,
+    base_url: String,
 }
 
 impl Client {
-    /// Creates a new instance of the Gemini Client.
-    ///
-    /// # Arguments
-    ///
-    /// * `api_key` - A static string representing the API key for authentication.
-    /// * `model` - A static string representing the model to be used.
-    ///
-    /// # Returns
-    ///
-    /// A new instance of the Gemini Client.
-    ///
-    /// # Panics
-    ///
-    /// Panics if there is an issue parsing the Gemini API URL.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use gems::Client;
-    ///
-    /// let client = Client::new("your_api_key", "your_model");
-    /// ```
-    pub fn new(api_key: &str, model: &str) -> Self {
-        let api_url = Url::parse(&GEMINI_API_URL.replace("gemini-pro", model)).unwrap();
-        Self {
-            client: ReqClient::builder()
-                .danger_accept_invalid_certs(true)
-                .build()
-                .expect("Failed to build HTTP client"),
-            api_key: api_key.to_owned(),
-            model: model.to_owned(),
-            api_url,
+    pub fn builder() -> CBuilder {
+        CBuilder::default()
+    }
+}
+
+impl CTrait for Client {
+    fn set_api_key(&self, api_key: String) {
+        let mut key = self.api_key.write().unwrap();
+        *key = Some(api_key);
+    }
+
+    fn get_api_key(&self) -> Option<String> {
+        self.api_key.read().unwrap().clone()
+    }
+
+    fn get_model(&self) -> Model {
+        self.model.read().unwrap().clone()
+    }
+
+    fn set_model(&mut self, model: Model) {
+        self.model = Arc::new(RwLock::new(model));
+    }
+
+    fn request(&self, method: Method, endpoint: &str) -> Result<RequestBuilder> {
+        let api_key = self.get_api_key().ok_or(anyhow!("API key not set"))?;
+
+        let full_url = if endpoint == "models" {
+            GEMINI_BASE_URL.to_string()
+        } else if endpoint.is_empty() {
+            format!("{}/{}", GEMINI_BASE_URL, self.get_model().to_string())
+        } else {
+            format!(
+                "{}/{}:{}",
+                GEMINI_BASE_URL,
+                self.get_model().to_string(),
+                endpoint
+            )
+        };
+
+        let parsed_url = Url::parse_with_params(&full_url, &[("key", api_key)]).unwrap();
+
+        Ok(self
+            .http_client
+            .request(method, parsed_url)
+            .header("Content-Type", "application/json"))
+    }
+
+    fn chat(&self) -> Chats {
+        Chats {
+            client: self.clone(),
+        }
+    }
+    fn embeddings(&self) -> Embeddings {
+        Embeddings {
+            client: self.clone(),
         }
     }
 
-    /// Generates content using the Gemini API.
-    ///
-    /// # Arguments
-    ///
-    /// * `text` - A static string representing the input text for content generation.
-    ///
-    /// # Returns
-    ///
-    /// A Result containing the generated content as a string or a reqwest::Error on failure.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use gems::Client;
-    ///
-    /// #[tokio::main]
-    /// async fn main() {
-    ///     let mut client = Client::new("your_api_key", "your_model");
-    ///     let result = client.generate_content("input_text").await;
-    ///     match result {
-    ///         Ok(content) => println!("Generated Content: {}", content),
-    ///         Err(err) => eprintln!("Error: {:?}", err),
-    ///     }
-    /// }
-    /// ```
-    pub async fn generate_content(
-        &mut self,
-        text: &str,
-    ) -> Result<String, Box<dyn std::error::Error>> {
-        let request_body = GeminiRequest {
-            model: self.model.to_string(),
-            contents: vec![Content {
-                parts: vec![Part::text(text)],
-            }],
-        };
-
-        self.api_url
-            .set_query(Some(&format!("key={}", self.api_key)));
-
-        let response = self
-            .client
-            .post(self.api_url.clone())
-            .header(header::CONTENT_TYPE, "application/json")
-            .json(&request_body)
-            .send()
-            .await?;
-
-        let json: GeminiResponse = response.json().await?;
-        let resp = json.candidates.ok_or("")?;
-
-        match &resp[0].content.parts[0] {
-            Part::Text { text } => Ok(text.clone()),
-            Part::Image { .. } => Err("Expected text but got image".into()),
+    fn tokens(&self) -> Tokens {
+        Tokens {
+            client: self.clone(),
         }
     }
 
-    /// Streams generated content using the Gemini API and prints it with a delay effect.
-    ///
-    /// # Arguments
-    ///
-    /// * `text` - A static string representing the input text for content generation.
-    /// * `suppress` - A boolean to decide whether or not to print the content being generated
-    ///
-    /// # Returns
-    ///
-    /// A Result indicating success or a Box<dyn Error> on failure.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use futures_util::StreamExt;
-    /// use gems::Client;
-    /// use gems::utils::{
-    ///     extract_text_from_partial_json, type_with_cursor_effect,
-    /// };
-    ///
-    /// #[tokio::main]
-    /// async fn main() {
-    ///     let mut client = Client::new("your_api_key", "your_model");
-    ///     let result = client.stream_generate_content("input_text").await;
-    ///     let mut stream = result.expect("response").bytes_stream();
-    ///     let delay = 5;
-    ///     let mut message: String = Default::default();
-    ///     while let Some(mut chunk) = stream.next().await {
-    ///         if let Ok(parsed_json) = std::str::from_utf8(chunk.as_mut().unwrap()) {
-    ///             if let Some(text_value) = extract_text_from_partial_json(parsed_json) {
-    ///                 let lines: Vec<&str> = text_value
-    ///                     .split("\\n")
-    ///                     .flat_map(|s| s.split('\n'))
-    ///                     .collect();
-    ///     
-    ///                 for line in lines {
-    ///                     message.push_str(&line.replace('\\', ""));
-    ///                     if !line.is_empty() {
-    ///                         type_with_cursor_effect(&line.replace('\\', ""), delay);
-    ///                     } else {
-    ///                         println!("\n");
-    ///                     }
-    ///                 }
-    ///             }
-    ///         } else {
-    ///             eprintln!("Failed to parse chunk: {:?}", chunk.as_ref().unwrap());
-    ///         }
-    ///     }
-    /// }
-    /// ```
-    pub async fn stream_generate_content(
-        &mut self,
-        text: &str,
-    ) -> Result<Response, Box<dyn Error>> {
-        let request_body = GeminiRequest {
-            model: self.model.to_string(),
-            contents: vec![Content {
-                parts: vec![Part::text(text)],
-            }],
-        };
-
-        let count_tokens_url = self
-            .api_url
-            .join(&format!(
-                "/v1beta/models/{}:streamGenerateContent",
-                self.model
-            ))
-            .unwrap();
-        let count_tokens_url_with_key = count_tokens_url
-            .clone()
-            .join(&format!("?key={}", self.api_key))
-            .unwrap();
-
-        let response = self
-            .client
-            .post(count_tokens_url_with_key.as_str())
-            .header(header::CONTENT_TYPE, "application/json")
-            .json(&request_body)
-            .send()
-            .await?;
-
-        Ok(response)
-    }
-
-    /// Counts the number of tokens in the provided text using the Gemini API.
-    ///
-    /// # Arguments
-    ///
-    /// * `text` - A static string representing the input text for token counting.
-    ///
-    /// # Returns
-    ///
-    /// A Result containing the count of tokens as usize or a reqwest::Error on failure.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use gems::Client;
-    ///
-    /// #[tokio::main]
-    /// async fn main() {
-    ///     let mut client = Client::new("your_api_key", "your_model");
-    ///     let result = client.count_tokens("input_text").await;
-    ///     match result {
-    ///         Ok(count) => println!("Token Count: {}", count),
-    ///         Err(err) => eprintln!("Error: {:?}", err),
-    ///     }
-    /// }
-    /// ```
-    pub async fn count_tokens(&mut self, text: &str) -> Result<usize, reqwest::Error> {
-        let request_body = GeminiRequest {
-            model: self.model.to_string(),
-            contents: vec![Content {
-                parts: vec![Part::text(text)],
-            }],
-        };
-
-        let count_tokens_url = self
-            .api_url
-            .join(&format!("/v1beta/models/{}:countTokens", self.model))
-            .unwrap();
-        let count_tokens_url_with_key = count_tokens_url
-            .clone()
-            .join(&format!("?key={}", self.api_key))
-            .unwrap();
-
-        let response = self
-            .client
-            .post(count_tokens_url_with_key.as_str())
-            .header(header::CONTENT_TYPE, "application/json")
-            .json(&request_body)
-            .send()
-            .await?;
-
-        let tokens_count: Value = response.json().await?;
-
-        let count = tokens_count["totalTokens"].as_u64().unwrap_or(0) as usize;
-
-        Ok(count)
-    }
-
-    /// Retrieves information about the specified model using the Gemini API.
-    ///
-    /// # Returns
-    ///
-    /// A Result containing model information or a reqwest::Error on failure.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use gems::Client;
-    ///
-    /// #[tokio::main]
-    /// async fn main() {
-    ///     let mut client = Client::new("your_api_key", "your_model");
-    ///     let result = client.get_model_info().await;
-    ///     match result {
-    ///         Ok(info) => println!("Model Info: {:?}", info),
-    ///         Err(err) => eprintln!("Error: {:?}", err),
-    ///     }
-    /// }
-    /// ```
-    pub async fn get_model_info(&mut self) -> Result<ModelInfo, reqwest::Error> {
-        let count_tokens_url = self
-            .api_url
-            .join(&format!("/v1beta/models/{}", self.model))
-            .unwrap();
-        let count_tokens_url_with_key = count_tokens_url
-            .clone()
-            .join(&format!("?key={}", self.api_key))
-            .unwrap();
-
-        let response = self
-            .client
-            .get(count_tokens_url_with_key.as_str())
-            .send()
-            .await?;
-
-        let model_info: ModelInfo = response.json().await?;
-
-        Ok(model_info)
-    }
-
-    /// Embeds content using the Gemini API.
-    ///
-    /// # Arguments
-    ///
-    /// * `text` - A static string representing the input text for content embedding.
-    ///
-    /// # Returns
-    ///
-    /// A Result containing the embedded content response or a reqwest::Error on failure.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use gems::Client;
-    ///
-    /// #[tokio::main]
-    /// async fn main() {
-    ///     let mut client = Client::new("your_api_key", "your_model");
-    ///     let result = client.embed_content("input_text").await;
-    ///     match result {
-    ///         Ok(response) => println!("Embedded Content: {:?}", response),
-    ///         Err(err) => eprintln!("Error: {:?}", err),
-    ///     }
-    /// }
-    /// ```
-    pub async fn embed_content(
-        &mut self,
-        text: &str,
-    ) -> Result<EmbedContentResponse, reqwest::Error> {
-        let request_body = GeminiEmbedRequest {
-            model: self.model.to_string(),
-            content: Content {
-                parts: vec![Part::text(text)],
-            },
-        };
-
-        let embed_content_url = self
-            .api_url
-            .join(&format!("/v1beta/models/{}:embedContent", self.model))
-            .unwrap();
-        let embed_content_url_with_key = embed_content_url
-            .clone()
-            .join(&format!("?key={}", self.api_key))
-            .unwrap();
-
-        let response = self
-            .client
-            .post(embed_content_url_with_key.as_str())
-            .header(header::CONTENT_TYPE, "application/json")
-            .json(&request_body)
-            .send()
-            .await?;
-
-        let json: EmbedContentResponse = response.json().await?;
-        Ok(json)
-    }
-
-    /// Batch embeds multiple contents using the Gemini API.
-    ///
-    /// # Arguments
-    ///
-    /// * `texts` - A vector of static strings representing the input texts for batch embedding.
-    ///
-    /// # Returns
-    ///
-    /// A Result containing the batch embedded contents response or a reqwest::Error on failure.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use gems::Client;
-    ///
-    /// #[tokio::main]
-    /// async fn main() {
-    ///     let mut client = Client::new("your_api_key", "your_model");
-    ///     let texts = vec!["text1", "text2", "text3"];
-    ///     let result = client.batch_embed_contents(texts).await;
-    ///     match result {
-    ///         Ok(response) => println!("Batch Embedded Contents: {:?}", response),
-    ///         Err(err) => eprintln!("Error: {:?}", err),
-    ///     }
-    /// }
-    /// ```
-    pub async fn batch_embed_contents(
-        &mut self,
-        texts: Vec<&str>,
-    ) -> Result<BatchEmbedContentsResponse, reqwest::Error> {
-        let requests = texts
-            .into_iter()
-            .map(|text| GeminiEmbedRequest {
-                model: "models/".to_owned() + &self.model,
-                content: Content {
-                    parts: vec![Part::text(text)],
-                },
-            })
-            .collect();
-
-        let request_body = GeminiEmbedRequests { requests };
-
-        let batch_embed_contents_url = self
-            .api_url
-            .join(&format!("/v1beta/models/{}:batchEmbedContents", self.model))
-            .unwrap();
-        let batch_embed_contents_url_with_key = batch_embed_contents_url
-            .clone()
-            .join(&format!("?key={}", self.api_key))
-            .unwrap();
-
-        let response = self
-            .client
-            .post(batch_embed_contents_url_with_key.as_str())
-            .header(header::CONTENT_TYPE, "application/json")
-            .json(&request_body)
-            .send()
-            .await?;
-
-        let json: BatchEmbedContentsResponse = response.json().await?;
-        Ok(json)
-    }
-
-    /// Retrieves a list of available models from the Gemini API.
-    ///
-    /// # Returns
-    ///
-    /// A Result containing the list of models or a reqwest::Error on failure.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use gems::Client;
-    ///
-    /// #[tokio::main]
-    /// async fn main() {
-    ///     let client = Client::new("your_api_key", "your_model");
-    ///     let result = client.list_models().await;
-    ///     match result {
-    ///         Ok(models) => println!("Available Models: {:?}", models),
-    ///         Err(err) => eprintln!("Error: {:?}", err),
-    ///     }
-    /// }
-    /// ```
-    pub async fn list_models(&self) -> Result<ModelsResponse, reqwest::Error> {
-        let models_url = self
-            .api_url
-            .join("/v1beta/models")
-            .expect("Failed to construct models URL");
-
-        let models_url_with_key = models_url
-            .clone()
-            .join(&format!("?key={}", self.api_key))
-            .expect("Failed to construct models URL with key");
-
-        let response = self
-            .client
-            .get(models_url_with_key.as_str())
-            .header(header::CONTENT_TYPE, "application/json")
-            .send()
-            .await?;
-
-        let json: ModelsResponse = response.json().await?;
-        Ok(json)
-    }
-
-    /// Generates content using the Gemini API with both text and image input.
-    ///
-    /// # Arguments
-    ///
-    /// * `text` - A static string representing the input text for content generation.
-    /// * `image_data` - A base64-encoded string representing the image data.
-    ///
-    /// # Returns
-    ///
-    /// A Result containing the generated content as a string or a reqwest::Error on failure.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use gems::Client;
-    ///
-    /// #[tokio::main]
-    /// async fn main() {
-    ///     let mut client = Client::new("your_api_key", "your_model");
-    ///     let result = client.generate_content_with_image("What is this picture?", "base64_encoded_image_data").await;
-    ///     match result {
-    ///         Ok(content) => println!("Generated Content: {}", content),
-    ///         Err(err) => eprintln!("Error: {:?}", err),
-    ///     }
-    /// }
-    /// ```
-    pub async fn generate_content_with_image(
-        &mut self,
-        text: &str,
-        image_data: &str,
-    ) -> Result<String, Box<dyn std::error::Error>> {
-        let model = "gemini-pro-vision".to_string();
-        let request_body = GeminiRequest {
-            model: model.clone(),
-            contents: vec![Content {
-                parts: vec![
-                    Part::text(text),
-                    Part::image(Some(ImageContent {
-                        mime_type: "image/jpeg".to_string(),
-                        data: image_data.to_string(),
-                    })),
-                ],
-            }],
-        };
-
-        let vision_url = self
-            .api_url
-            .join(&format!("/v1beta/models/{}:generateContent", model.clone()))
-            .unwrap();
-
-        let vision_url_with_key = vision_url
-            .clone()
-            .join(&format!("?key={}", self.api_key))
-            .unwrap();
-
-        let response = self
-            .client
-            .post(vision_url_with_key)
-            .header(header::CONTENT_TYPE, "application/json")
-            .json(&request_body)
-            .send()
-            .await?;
-
-        let json: GeminiResponse = response.json().await?;
-        let resp = json.candidates.ok_or("")?;
-
-        match &resp[0].content.parts[0] {
-            Part::Text { text } => Ok(text.clone()),
-            Part::Image { .. } => Err("Expected text but got image".into()),
+    fn vision(&self) -> Visions {
+        Visions {
+            client: self.clone(),
         }
+    }
+
+    fn stream(&self) -> Streaming {
+        Streaming {
+            client: self.clone(),
+        }
+    }
+
+    fn models(&self) -> Models {
+        Models {
+            client: self.clone(),
+        }
+    }
+}
+
+#[derive(Default)]
+pub struct CBuilder {
+    model: Option<Model>,
+    base_url: Option<String>,
+}
+
+impl CBuilder {
+    pub fn model(mut self, model: &str) -> Self {
+        self.model = Some(Model::from_str(model).unwrap_or_default());
+        self
+    }
+
+    pub fn base_url(mut self, base_url: &str) -> Self {
+        self.base_url = Some(base_url.to_string());
+        self
+    }
+
+    pub fn build(self) -> Result<Client> {
+        let model = self.model.unwrap_or_default();
+
+        Ok(Client {
+            http_client: Arc::new(
+                HttpClient::builder()
+                    .danger_accept_invalid_certs(true)
+                    .build()?,
+            ),
+            api_key: Arc::new(RwLock::new(None)),
+            model: Arc::new(RwLock::new(model)),
+            base_url: self.base_url.unwrap_or_else(|| GEMINI_BASE_URL.to_string()),
+        })
     }
 }
