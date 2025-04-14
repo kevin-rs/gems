@@ -1,5 +1,6 @@
 use crate::chat::Chats;
 use crate::embed::Embeddings;
+use crate::imagen::Images;
 use crate::models::Model;
 use crate::models::Models;
 use crate::stream::Streaming;
@@ -105,6 +106,12 @@ impl CTrait for Client {
 
     fn models(&self) -> Models {
         Models {
+            client: self.clone(),
+        }
+    }
+
+    fn images(&self) -> Images {
+        Images {
             client: self.clone(),
         }
     }

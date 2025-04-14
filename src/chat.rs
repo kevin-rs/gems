@@ -32,6 +32,7 @@ impl Chats {
         let request_body = GeminiRequest {
             model: params.model.to_string(),
             contents: vec![content],
+            config: None,
         };
 
         let req = self

@@ -47,6 +47,7 @@ impl Visions {
             contents: vec![crate::requests::Content {
                 parts: vec![input_part, image_part],
             }],
+            config: None,
         };
 
         let req = self

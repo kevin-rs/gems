@@ -1,5 +1,6 @@
 use crate::chat::Chats;
 use crate::embed::Embeddings;
+use crate::imagen::Images;
 use crate::models::Model;
 use crate::models::Models;
 use crate::stream::Streaming;
@@ -21,4 +22,5 @@ pub trait CTrait {
     fn vision(&self) -> Visions;
     fn stream(&self) -> Streaming;
     fn models(&self) -> Models;
+    fn images(&self) -> Images;
 }
