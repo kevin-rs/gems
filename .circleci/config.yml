@@ -1,0 +1,20 @@
+# Rust CircleCI 2.1 configuration file
+version: 2.1
+aliases:
+  - &rust_container
+    docker:
+      - image: cimg/rust:1.86.0
+jobs:
+  testing:
+    <<: *rust_container
+    steps:
+      - checkout
+      - run:
+          name: Run Tests
+          command: cargo test --all-features
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - testing

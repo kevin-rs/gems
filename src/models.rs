@@ -7,7 +7,7 @@ use derive_builder::Builder;
 use reqwest::Method;
 use std::str::FromStr;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub enum Model {
     Pro25Preview,
     #[default]

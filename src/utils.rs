@@ -106,8 +106,7 @@ pub fn extract_image_or_text(parts: &[Part]) -> Result<Vec<u8>> {
     }) {
         let image_bytes = STANDARD.decode(&base64_data)?;
         Ok(image_bytes)
-    }
-    else if let Some(text) = parts.iter().find_map(|part| match part {
+    } else if let Some(text) = parts.iter().find_map(|part| match part {
         Part::Text { text } => Some(text.clone()),
         _ => None,
     }) {

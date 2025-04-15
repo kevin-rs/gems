@@ -20,6 +20,8 @@ pub struct Images {
 pub struct ImageGen {
     pub model: Model,
     pub input: Message,
+    #[builder(setter(into, strip_option), default)]
+    pub system: Option<Vec<Message>>,
 }
 
 impl Images {
@@ -27,9 +29,15 @@ impl Images {
         let content = Content {
             parts: vec![params.input.to_part()],
         };
+
+        let system_instruction = params.system.as_ref().map(|messages| Content {
+            parts: messages.iter().map(|msg| msg.to_part()).collect(),
+        });
+
         let request_body = GeminiRequest {
             model: params.model.to_string(),
             contents: vec![content],
+            system_instruction,
             config: Some(GenerationConfig {
                 response_modalities: vec!["Text".into(), "Image".into()],
             }),
