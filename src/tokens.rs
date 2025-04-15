@@ -19,15 +19,21 @@ pub struct Tokens {
 pub struct Token {
     model: Model,
     input: Message,
+    system: Vec<Message>,
 }
 
 impl Tokens {
     pub async fn count(&self, params: Token) -> Result<usize> {
+        let system_instruction = Content {
+            parts: params.system.iter().map(|msg| msg.to_part()).collect(),
+        };
+
         let request_body = GeminiRequest {
             model: params.model.to_string(),
             contents: vec![Content {
                 parts: vec![params.input.to_part()],
             }],
+            system_instruction: Some(system_instruction),
             config: None,
         };
 

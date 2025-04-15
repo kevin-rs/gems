@@ -16,6 +16,8 @@ use reqwest::Method;
 pub struct Chat {
     pub model: Model,
     pub messages: Vec<Message>,
+    #[builder(setter(into, strip_option), default)]
+    pub system: Option<Vec<Message>>,
 }
 
 #[derive(Clone)]
@@ -29,9 +31,14 @@ impl Chats {
             parts: params.messages.iter().map(|msg| msg.to_part()).collect(),
         };
 
+        let system_instruction = params.system.as_ref().map(|messages| Content {
+            parts: messages.iter().map(|msg| msg.to_part()).collect(),
+        });
+
         let request_body = GeminiRequest {
             model: params.model.to_string(),
             contents: vec![content],
+            system_instruction,
             config: None,
         };
 

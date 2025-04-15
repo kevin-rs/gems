@@ -1,6 +1,6 @@
 use crate::requests::Part;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Content {
     Text(String),
 }
@@ -11,7 +11,7 @@ impl Default for Content {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Message {
     User {
         content: Content,

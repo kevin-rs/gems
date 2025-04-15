@@ -19,15 +19,22 @@ pub struct Streaming {
 pub struct Stream {
     pub model: Model,
     pub input: Message,
+    #[builder(setter(into, strip_option), default)]
+    pub system: Option<Vec<Message>>,
 }
 
 impl Streaming {
     pub async fn generate(&self, params: Stream) -> Result<Response> {
+        let system_instruction = params.system.as_ref().map(|messages| Content {
+            parts: messages.iter().map(|msg| msg.to_part()).collect(),
+        });
+
         let request_body = GeminiRequest {
             model: params.model.to_string(),
             contents: vec![Content {
                 parts: vec![params.input.to_part()],
             }],
+            system_instruction,
             config: None,
         };
 

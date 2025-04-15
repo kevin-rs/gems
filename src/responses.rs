@@ -16,7 +16,7 @@ pub struct BatchEmbedContentsResponse {
 }
 
 /// Structure representing embedding information.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Default, Clone)]
 pub struct Embedding {
     /// List of values for the embedding.
     pub values: Vec<f64>,

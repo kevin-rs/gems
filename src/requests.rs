@@ -11,6 +11,10 @@ pub struct GeminiRequest {
 
     #[serde(rename = "generationConfig", skip_serializing_if = "Option::is_none")]
     pub config: Option<GenerationConfig>,
+
+    /// Optional system-level instruction.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub system_instruction: Option<Content>,
 }
 
 /// Request structure for content embedding.

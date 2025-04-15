@@ -1,6 +1,7 @@
 use crate::messages::Content;
 use crate::messages::Message;
 use crate::models::Model;
+use crate::requests::Content as ReqContent;
 use crate::requests::GeminiRequest;
 use crate::requests::ImageContent;
 use crate::requests::Part;
@@ -22,11 +23,17 @@ pub struct Visions {
 pub struct Vision {
     pub input: Message,
     pub image: Message,
+    #[builder(setter(into, strip_option), default)]
+    pub system: Option<Vec<Message>>,
 }
 
 impl Visions {
     pub async fn generate(&self, params: Vision) -> Result<String> {
         let input_part = params.input.to_part();
+
+        let system_instruction = params.system.as_ref().map(|messages| ReqContent {
+            parts: messages.iter().map(|msg| msg.to_part()).collect(),
+        });
 
         let image_data = match &params.image {
             Message::Tool { content } => content.clone(),
@@ -47,6 +54,7 @@ impl Visions {
             contents: vec![crate::requests::Content {
                 parts: vec![input_part, image_part],
             }],
+            system_instruction,
             config: None,
         };
 
