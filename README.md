@@ -136,7 +136,7 @@ gems imagen -t "Hi, can you create a 3d rendered image of a pig with wings and a
 
    ```toml
    [dependencies]
-   gems = "0.1.1"
+   gems = "0.1.2"
    ```
 
 1. Use the `Client` struct to interact with the Gemini API:
