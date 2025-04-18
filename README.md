@@ -156,7 +156,7 @@ gems
 
    ```toml
    [dependencies]
-   gems = "0.1.2"
+   gems = "0.1.3"
    ```
 
 1. Use the `Client` struct to interact with the Gemini API:
