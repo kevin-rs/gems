@@ -24,8 +24,7 @@ fn styles() -> Styles {
     propagate_version = true,
     styles = styles(),
     help_template = r#"{before-help}{name} {version}
-{about-with-newline}
-
+{about}
 {usage-heading} {usage}
 
 {all-args}{after-help}
@@ -52,6 +51,9 @@ USAGE:
   gems [OPTIONS] <COMMAND>
 
 EXAMPLES:
+  Run TUI:
+    gems
+
   Generate content:
     gems generate -t "Hello"
 
@@ -76,7 +78,7 @@ EXAMPLES:
   List models:
     gems list
 
-For more information, visit: github.com/wiseaidev/gems
+For more information, visit: github.com/kevin-rs/gems
 "#
 )]
 pub struct Cli {
@@ -87,7 +89,7 @@ pub struct Cli {
     #[arg(short, long)]
     pub model: Option<String>,
     #[command(subcommand)]
-    pub cmd: Command,
+    pub cmd: Option<Command>,
 }
 
 #[cfg(feature = "cli")]

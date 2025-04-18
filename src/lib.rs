@@ -17,5 +17,7 @@ pub mod vision;
 
 #[cfg(feature = "cli")]
 pub mod cli;
+#[cfg(feature = "cli")]
+pub mod tui;
 
 pub use client::Client;

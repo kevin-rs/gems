@@ -23,9 +23,21 @@ clap = { version = "4.5.1", features = ["derive"] , optional = true  }
 base64 = "0.22.0"
 anyhow = "1.0.97"
 derive_builder = "0.20.2"
+ratatui = { version = "0.29.0", features = ["crossterm"], optional = true }
+tui-input = { version = "0.11.1", optional = true }
+crossterm = { version = "=0.28.1", optional = true }
+strum = { version = "0.27.1", features = ["derive"], optional = true }
+strum_macros = { version = "0.27.1", optional = true }
 
 [features]
-cli = ["clap"]
+cli = [
+    "clap",
+    "ratatui",
+    "tui-input",
+    "crossterm",
+    "strum",
+    "strum_macros"
+]
 
 [profile.release]
 codegen-units = 1
