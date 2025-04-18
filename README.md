@@ -11,6 +11,7 @@
 | ![gems-demo](https://github.com/user-attachments/assets/c446c29f-d4c8-4ee0-9e3d-951310e2b972) | ![gems-demo](https://github.com/user-attachments/assets/e942d1ad-7df6-4532-b22f-d4c586e64c8a) |
 | [Download Executable File](https://github.com/kevin-rs/gems/releases/download/v0.1.3/gems) | [Download `.exe` File](https://github.com/kevin-rs/gems/releases/download/v0.1.3/gems.exe) |
 | `cargo install gems --all-features` | `cargo install gems --all-features` |
+| `gems -h` | `gems -h` |
 
 </div>
 
@@ -156,7 +157,7 @@ gems
 
    ```toml
    [dependencies]
-   gems = "0.1.2"
+   gems = "0.1.3"
    ```
 
 1. Use the `Client` struct to interact with the Gemini API:
