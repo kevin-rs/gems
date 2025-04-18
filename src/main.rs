@@ -22,6 +22,7 @@ async fn main() -> Result<()> {
         use gems::stream::StreamBuilder;
         use gems::tokens::TokenBuilder;
         use gems::traits::CTrait;
+        use gems::tui::run_tui;
         use gems::utils::{
             extract_text_from_partial_json, load_and_encode_image, type_with_cursor_effect,
         };
@@ -48,7 +49,7 @@ async fn main() -> Result<()> {
 
         gemini_client.set_api_key(api_key);
         match args.cmd {
-            Command::Generate(cmd) => {
+            Some(Command::Generate(cmd)) => {
                 let parameters = ChatBuilder::default()
                     .model(Model::Flash20)
                     .messages(vec![Message::User {
@@ -60,7 +61,7 @@ async fn main() -> Result<()> {
                 let response = gemini_client.chat().generate(parameters).await?;
                 println!("{}", response);
             }
-            Command::Stream(cmd) => {
+            Some(Command::Stream(cmd)) => {
                 let parameters = StreamBuilder::default()
                     .model(Model::Flash20)
                     .input(Message::User {
@@ -97,7 +98,7 @@ async fn main() -> Result<()> {
 
                 println!();
             }
-            Command::Count(cmd) => {
+            Some(Command::Count(cmd)) => {
                 let params = TokenBuilder::default()
                     .input(Message::User {
                         content: Content::Text(cmd.text),
@@ -108,7 +109,7 @@ async fn main() -> Result<()> {
                 let count = gemini_client.tokens().count(params).await?;
                 println!("Token Count: {:?}", count);
             }
-            Command::Embed(cmd) => {
+            Some(Command::Embed(cmd)) => {
                 let params = EmbeddingBuilder::default()
                     .model(Model::Embedding)
                     .input(Message::User {
@@ -120,7 +121,7 @@ async fn main() -> Result<()> {
                 let response = gemini_client.embeddings().create(params).await?;
                 println!("Embed Content: {:?}", response);
             }
-            Command::Batch(cmd) => {
+            Some(Command::Batch(cmd)) => {
                 let texts: Vec<Message> = cmd
                     .texts
                     .iter()
@@ -138,7 +139,7 @@ async fn main() -> Result<()> {
                 let response = gemini_client.embeddings().batch(params).await?;
                 println!("Batch Embed Contents: {:?}", response);
             }
-            Command::Vision(cmd) => {
+            Some(Command::Vision(cmd)) => {
                 let base64_image_data = match load_and_encode_image(&cmd.image) {
                     Ok(data) => data,
                     Err(_) => {
@@ -159,16 +160,16 @@ async fn main() -> Result<()> {
                 let result = gemini_client.vision().generate(params).await?;
                 println!("{}", result);
             }
-            Command::Info(_) => {
+            Some(Command::Info(_)) => {
                 let params = ModBuilder::default().model(Model::default()).build()?;
                 let model_info = gemini_client.models().get(params).await?;
                 model_info.print();
             }
-            Command::List(_) => {
+            Some(Command::List(_)) => {
                 let models = gemini_client.models().list().await?;
                 models.print();
             }
-            Command::Imagen(cmd) => {
+            Some(Command::Imagen(cmd)) => {
                 gemini_client.set_model(Model::FlashExpImage);
 
                 let params = ImageGenBuilder::default()
@@ -183,6 +184,9 @@ async fn main() -> Result<()> {
                 let image_data = gemini_client.images().generate(params).await?;
 
                 std::fs::write("output.png", &image_data)?;
+            }
+            None => {
+                let _ = run_tui().await;
             }
         }
     }

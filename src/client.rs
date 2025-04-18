@@ -18,7 +18,7 @@ use std::sync::{Arc, RwLock};
 
 const GEMINI_BASE_URL: &str = "https://generativelanguage.googleapis.com/v1beta/models";
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 #[allow(dead_code)]
 pub struct Client {
     http_client: Arc<HttpClient>,

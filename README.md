@@ -1,8 +1,20 @@
+<div align="center">
+
 # 💎 Gems
 
 [![Crates.io](https://img.shields.io/crates/v/gems.svg)](https://crates.io/crates/gems)
 [![docs](https://docs.rs/gems/badge.svg)](https://docs.rs/gems/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+| 🐧 Linux `(Recommended)` | 🪟 Windows |
+| :------: | :--------: |
+| ![gems-demo](https://github.com/user-attachments/assets/c446c29f-d4c8-4ee0-9e3d-951310e2b972) | ![gems-demo](https://github.com/user-attachments/assets/e942d1ad-7df6-4532-b22f-d4c586e64c8a) |
+| [Download Executable File](https://github.com/kevin-rs/gems/releases/download/v0.1.3/gems) | [Download `.exe` File](https://github.com/kevin-rs/gems/releases/download/v0.1.3/gems.exe) |
+| `cargo install gems --all-features` | `cargo install gems --all-features` |
+
+</div>
+
+<video src="https://github.com/user-attachments/assets/cd17c52a-086c-4d21-9129-93f6ec2df61d"></video>
 
 > 💎 GEMS: A cli, tui, and sdk for interacting with the Gemini API, allowing you to generate creative content, perform text-related tasks, and get information about supported models.
 
@@ -31,6 +43,7 @@ cargo install --locked gems --all-features
 - Generate creative content with ease.
 - Stream generation of content for continuous output.
 - Count the number of tokens in a text.
+- Generate images.
 - Embed content into a specified model.
 - Batch embed multiple contents efficiently.
 - Get information about the current model and list available models.
@@ -106,10 +119,17 @@ gems list
 gems imagen -t "Hi, can you create a 3d rendered image of a pig with wings and a top hat flying over a happy futuristic scifi city with lots of greenery?"
 ```
 
+### TUI mode
+
+```sh
+gems
+```
+
 ## 🎨 Options
 
 | Option                   | Description                                              |
 |--------------------------|----------------------------------------------------------|
+| ``                       | TUI mode.                                                |
 | `--api-key`              | Specify the API key for accessing the Gemini API.        |
 | `--model`                | Specify the model to use for generating content.         |
 
