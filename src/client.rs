@@ -6,6 +6,8 @@ use crate::models::Models;
 use crate::stream::Streaming;
 use crate::tokens::Tokens;
 use crate::traits::CTrait;
+use crate::tts::Tts;
+use crate::vidgen::Videos;
 use crate::vision::Visions;
 use anyhow::anyhow;
 use anyhow::Result;
@@ -66,7 +68,6 @@ impl CTrait for Client {
                 endpoint
             )
         };
-
         let parsed_url = Url::parse_with_params(&full_url, &[("key", api_key)]).unwrap();
 
         Ok(self
@@ -112,6 +113,18 @@ impl CTrait for Client {
 
     fn images(&self) -> Images {
         Images {
+            client: self.clone(),
+        }
+    }
+
+    fn videos(&self) -> Videos {
+        Videos {
+            client: self.clone(),
+        }
+    }
+
+    fn tts(&self) -> Tts {
+        Tts {
             client: self.clone(),
         }
     }

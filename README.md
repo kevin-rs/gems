@@ -120,6 +120,21 @@ gems list
 gems imagen -t "Hi, can you create a 3d rendered image of a pig with wings and a top hat flying over a happy futuristic scifi city with lots of greenery?"
 ```
 
+### Generate a Video
+
+```sh
+gems vidgen -t "Yo, generate a humble bumble golden retriever puppy running through a flower field."
+```
+
+### Text to speech
+
+```sh
+gems tts -t "Yo, Say 'Hello' with a humble bumble voice!."
+
+# Then install `ffmpeg` and run:
+ffmpeg -f s16le -ar 24000 -ac 1 -i output.pcm out.wav
+```
+
 ### TUI mode
 
 ```sh
@@ -143,6 +158,8 @@ gems
 | `vision`                | Analyze an image and generate content from text.         |
 | `stream`                | Stream the generation of content.                        |
 | `imagen`                | Generate an image.                                       |
+| `vidgen`                | Generate a video.                                        |
+| `tts`                   | Text to speech.                                          |
 | `count`                 | Count the number of tokens in a text.                    |
 | `embed`                 | Embed content into a specified model.                    |
 | `batch`                 | Batch embed multiple contents.                           |

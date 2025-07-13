@@ -78,7 +78,7 @@ async fn test_embed_create() -> Result<()> {
             "Embedding value should be finite (not NaN or infinite)"
         );
         assert!(
-            value >= -1.0 && value <= 1.0,
+            (-1.0..=1.0).contains(&value),
             "Embedding value out of expected range: {}",
             value
         );
