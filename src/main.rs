@@ -22,6 +22,9 @@ async fn main() -> Result<()> {
         use gems::stream::StreamBuilder;
         use gems::tokens::TokenBuilder;
         use gems::traits::CTrait;
+        use gems::tts::TtsGenBuilder;
+        use gems::vidgen::VideoGenBuilder;
+
         use gems::tui::run_tui;
         use gems::utils::{
             extract_text_from_partial_json, load_and_encode_image, type_with_cursor_effect,
@@ -183,7 +186,40 @@ async fn main() -> Result<()> {
 
                 let image_data = gemini_client.images().generate(params).await?;
 
-                std::fs::write("output.png", &image_data)?;
+                tokio::fs::write("output.png", &image_data).await?;
+            }
+            Some(Command::Vidgen(cmd)) => {
+                gemini_client.set_model(Model::Veo2);
+
+                let params = VideoGenBuilder::default()
+                    .model(Model::Veo2)
+                    .input(Message::User {
+                        content: Content::Text(cmd.text),
+                        name: None,
+                    })
+                    .build()
+                    .unwrap();
+
+                let bytes = gemini_client.videos().generate(params).await?;
+
+                tokio::fs::write("output.mp4", &bytes).await?;
+            }
+            Some(Command::Tts(cmd)) => {
+                gemini_client.set_model(Model::Tts);
+
+                let params = TtsGenBuilder::default()
+                    .model(Model::Tts)
+                    .input(Message::User {
+                        content: Content::Text(cmd.text),
+                        name: None,
+                    })
+                    .voice(cmd.voice)
+                    .build()
+                    .unwrap();
+
+                let bytes = gemini_client.tts().generate(params).await?;
+
+                tokio::fs::write("output.pcm", &bytes).await?;
             }
             None => {
                 let _ = run_tui().await;

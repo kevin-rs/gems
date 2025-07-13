@@ -12,7 +12,9 @@ pub mod responses;
 pub mod stream;
 pub mod tokens;
 pub mod traits;
+pub mod tts;
 pub mod utils;
+pub mod vidgen;
 pub mod vision;
 
 #[cfg(feature = "cli")]

@@ -85,3 +85,62 @@ pub struct GenerationConfig {
     #[serde(rename = "responseModalities")]
     pub response_modalities: Vec<String>,
 }
+
+/// Request payload for video generation using Veo.
+#[derive(Debug, Serialize)]
+pub struct VideoGenRequest {
+    pub instances: Vec<VideoPrompt>,
+    pub parameters: VideoParameters,
+}
+
+/// The prompt inside the request.
+#[derive(Debug, Serialize)]
+pub struct VideoPrompt {
+    pub prompt: String,
+}
+
+/// Optional parameters for generation behavior.
+#[derive(Debug, Serialize)]
+pub struct VideoParameters {
+    #[serde(rename = "aspectRatio")]
+    pub aspect_ratio: String,
+
+    #[serde(rename = "personGeneration")]
+    pub person_generation: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct TtsRequest {
+    pub model: String,
+    pub contents: Vec<Content>,
+    #[serde(rename = "generationConfig")]
+    pub generation_config: TtsGenerationConfig,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub system_instruction: Option<Content>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct TtsGenerationConfig {
+    #[serde(rename = "responseModalities")]
+    pub response_modalities: Vec<String>,
+    #[serde(rename = "speechConfig")]
+    pub speech_config: SpeechConfig,
+}
+
+#[derive(Debug, Serialize)]
+pub struct SpeechConfig {
+    #[serde(rename = "voiceConfig")]
+    pub voice_config: VoiceConfig,
+}
+
+#[derive(Debug, Serialize)]
+pub struct VoiceConfig {
+    #[serde(rename = "prebuiltVoiceConfig")]
+    pub prebuilt_voice_config: PrebuiltVoiceConfig,
+}
+
+#[derive(Debug, Serialize)]
+pub struct PrebuiltVoiceConfig {
+    #[serde(rename = "voiceName")]
+    pub voice_name: String,
+}

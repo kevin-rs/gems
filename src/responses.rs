@@ -133,13 +133,13 @@ pub struct ImagenResponse {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Candidate {
+pub struct TtsCandidate {
     pub content: Content,
     pub finish_reason: Option<String>,
     pub index: Option<i32>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Content {
     pub parts: Vec<Part>,
@@ -155,6 +155,10 @@ pub enum Part {
     Image {
         #[serde(rename = "inlineData")]
         inline_data: ImageContent,
+    },
+    Media {
+        #[serde(rename = "inlineData")]
+        inline_data: InlineData,
     },
 }
 
@@ -178,4 +182,73 @@ pub struct UsageMetadata {
 pub struct PromptTokenDetail {
     pub modality: Option<String>,
     pub token_count: Option<i32>,
+}
+
+/// Response returned immediately after submitting the generation request.
+#[derive(Debug, Deserialize)]
+pub struct VideoGenResponse {
+    pub name: Option<String>,
+}
+
+/// Polling response to check operation status.
+#[derive(Debug, Deserialize)]
+pub struct OperationStatus {
+    pub done: Option<bool>,
+    pub error: Option<OperationError>,
+    pub response: Option<OperationResponse>,
+}
+
+/// Error details if the operation fails.
+#[derive(Debug, Deserialize)]
+pub struct OperationError {
+    pub message: String,
+}
+
+/// Successful operation result.
+#[derive(Debug, Deserialize)]
+pub struct OperationResponse {
+    pub output: VideoOutput,
+}
+
+/// Output payload containing the video.
+#[derive(Debug, Deserialize)]
+pub struct VideoOutput {
+    pub video: EncodedVideo,
+}
+
+/// The actual video content encoded in base64.
+#[derive(Debug, Deserialize)]
+pub struct EncodedVideo {
+    #[serde(rename = "mimeType")]
+    pub mime_type: String,
+
+    #[serde(rename = "base64Data")]
+    pub base64_data: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ErrorWrapper {
+    pub error: ErrorMessage,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ErrorMessage {
+    pub message: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct TtsResponse {
+    pub candidates: Option<Vec<Candidate>>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct Candidate {
+    pub content: Content,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct InlineData {
+    pub mime_type: String,
+    pub data: String,
 }

@@ -5,6 +5,8 @@ use crate::models::Model;
 use crate::models::Models;
 use crate::stream::Streaming;
 use crate::tokens::Tokens;
+use crate::tts::Tts;
+use crate::vidgen::Videos;
 use crate::vision::Visions;
 use anyhow::Result;
 use reqwest::{Method, RequestBuilder};
@@ -23,4 +25,6 @@ pub trait CTrait {
     fn stream(&self) -> Streaming;
     fn models(&self) -> Models;
     fn images(&self) -> Images;
+    fn videos(&self) -> Videos;
+    fn tts(&self) -> Tts;
 }

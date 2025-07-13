@@ -72,11 +72,23 @@ EXAMPLES:
   Batch embed contents:
     gems -m 'embedding-001' batch -t "Write a story about a magic backpack.","Generate a poem about nature."
 
+  Generate an Image:
+    gems imagen -t "Yo, create a 3d rendered image of a cat with wings."
+
+  Generate a Video:
+    gems vidgen -t "Yo, generate a humble bumble golden retriever puppy running through a flower field."
+
+  Text to speech:
+    gems tts -t "Yo, Say 'Hello' with a humble bumble voice!."
+
   Get model info:
     gems info
 
   List models:
     gems list
+
+  TUI mode:
+    gems
 
 For more information, visit: github.com/kevin-rs/gems
 "#
@@ -104,6 +116,8 @@ pub enum Command {
     Info(Info),
     List(List),
     Imagen(Imagen),
+    Vidgen(Vidgen),
+    Tts(Tts),
 }
 
 #[cfg(feature = "cli")]
@@ -171,4 +185,23 @@ pub struct Imagen {
     /// The text to generate image from.
     #[arg(short, long, default_value_t = String::from("Hi, step bro... I need help generating a happy, humble, bumble Rustacean. he's stuck in the shower and won't compile."))]
     pub text: String,
+}
+
+#[cfg(feature = "cli")]
+#[derive(Args, Debug, Clone)]
+pub struct Vidgen {
+    /// The text to generate video from.
+    #[arg(short, long, default_value_t = String::from("A humble bumble golden retriever puppy running through a flower field"))]
+    pub text: String,
+}
+
+#[cfg(feature = "cli")]
+#[derive(Args, Debug, Clone)]
+pub struct Tts {
+    /// The prompt.
+    #[arg(short, long, default_value_t = String::from("Say cheerfully: Have a wonderful day!"))]
+    pub text: String,
+    /// The voice.
+    #[arg(short, long, default_value_t = String::from("Kore"))]
+    pub voice: String,
 }

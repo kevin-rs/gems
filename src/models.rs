@@ -19,6 +19,7 @@ pub enum Model {
     Embedding,
     Imagen3,
     Veo2,
+    Tts,
     Flash20Live,
     FlashExpImage,
 }
@@ -36,6 +37,7 @@ impl ToString for Model {
             Model::Embedding => "text-embedding-004",
             Model::Imagen3 => "imagen-3.0-generate-002",
             Model::Veo2 => "veo-2.0-generate-001",
+            Model::Tts => "gemini-2.5-flash-preview-tts",
             Model::Flash20Live => "gemini-2.0-flash-live-001",
             Model::FlashExpImage => "gemini-2.0-flash-exp-image-generation",
         }
@@ -57,6 +59,7 @@ impl FromStr for Model {
             "text-embedding-004" => Ok(Model::Embedding),
             "imagen-3.0-generate-002" => Ok(Model::Imagen3),
             "veo-2.0-generate-001" => Ok(Model::Veo2),
+            "gemini-2.5-flash-preview-tts" => Ok(Model::Tts),
             "gemini-2.0-flash-live-001" => Ok(Model::Flash20Live),
             "gemini-2.0-flash-exp-image-generation" => Ok(Model::Flash20Live),
             _ => Err(anyhow!("Unknown model: {}", s)),
